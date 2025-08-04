@@ -50,3 +50,6 @@ TagManager:
   - name: Water
     uniqueID: 909505767
     locked: 0
+  - name: Player
+    uniqueID: 1106396533
+    locked: 0
