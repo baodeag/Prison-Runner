@@ -9,39 +9,57 @@ public class PlayerMovement : MonoBehaviour
     Vector2 moveInput;
     Rigidbody2D myRigidbody;
     Animator myAnimator;
-    CapsuleCollider2D myCapsuleCollider;
+    CapsuleCollider2D myBodyCollider;
+    BoxCollider2D myFeetCollider;
     float gravityScaleAtStart;
 
     [SerializeField] float runSpeed = 5f;
     [SerializeField] float jumpSpeed = 5f;
     [SerializeField] float climbSpeed = 5f;
+    [SerializeField] Vector2 deathKick = new Vector2(10f,10f);
+
+    bool isAlive = true; // Variable to track if the player is alive
 
     // Start is called before the first frame update
     void Start()
     {
         myRigidbody = GetComponent<Rigidbody2D>();
         myAnimator = GetComponent<Animator>();
-        myCapsuleCollider = GetComponent<CapsuleCollider2D>();
+        myBodyCollider = GetComponent<CapsuleCollider2D>();
+        myFeetCollider = GetComponent<BoxCollider2D>();
         gravityScaleAtStart = myRigidbody.gravityScale; // Store the initial gravity scale
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!isAlive)
+        {
+            return; // If the player is not alive, skip the update logic
+        }
         Run();
         FlipSprite();
         ClimbingLadder();
+        Die();
     }
 
     void OnMove(InputValue value)
     {
+        if (!isAlive)
+        {
+            return; // If the player is not alive, skip the update logic
+        }
         moveInput = value.Get<Vector2>();
         Debug.Log(moveInput);
     }
 
     void OnJump(InputValue value)
     {
-        if(!myCapsuleCollider.IsTouchingLayers(LayerMask.GetMask("Ground"))) // check if the player is touching the ground
+        if (!isAlive)
+        {
+            return; // If the player is not alive, skip the update logic
+        }
+        if (!myFeetCollider.IsTouchingLayers(LayerMask.GetMask("Ground"))) // check if the player is touching the ground
         {
             return; // If not touching the ground, do not allow jumping
         }
@@ -74,7 +92,7 @@ public class PlayerMovement : MonoBehaviour
 
     void ClimbingLadder()
     {
-        if (!myCapsuleCollider.IsTouchingLayers(LayerMask.GetMask("Climbing")))
+        if (!myFeetCollider.IsTouchingLayers(LayerMask.GetMask("Climbing")))
         {
             myRigidbody.gravityScale = gravityScaleAtStart; // Restore the original gravity scale
             myAnimator.SetBool("isClimbing", false);
@@ -88,5 +106,16 @@ public class PlayerMovement : MonoBehaviour
         bool playerHasVerticalSpeed = Mathf.Abs(myRigidbody.velocity.y) > Mathf.Epsilon;
         myAnimator.SetBool("isClimbing", playerHasVerticalSpeed); // Reset climbing animation state
 
+    }
+
+    void Die()
+    {
+        if (myBodyCollider.IsTouchingLayers(LayerMask.GetMask("Enemy")))
+        {
+
+            isAlive = false; // Set the player to not alive
+            myAnimator.SetTrigger("Dying"); // Trigger the dying animation
+            myRigidbody.velocity = deathKick;
+        }
     }
 }
