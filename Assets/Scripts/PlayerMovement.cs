@@ -17,6 +17,8 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float jumpSpeed = 5f;
     [SerializeField] float climbSpeed = 5f;
     [SerializeField] Vector2 deathKick = new Vector2(10f,10f);
+    [SerializeField] GameObject bullet;
+    [SerializeField] Transform gun;
 
     bool isAlive = true; // Variable to track if the player is alive
 
@@ -42,12 +44,20 @@ public class PlayerMovement : MonoBehaviour
         ClimbingLadder();
         Die();
     }
+    void OnFire(InputValue value)
+    {
+        if (!isAlive)
+        {
+            return; // If the player is not alive, skip the update logic
+        }
+        Instantiate(bullet, gun.position, transform.rotation); // Instantiate the bullet at the gun's position
+    }
 
     void OnMove(InputValue value)
     {
         if (!isAlive)
         {
-            return; // If the player is not alive, skip the update logic
+            return; 
         }
         moveInput = value.Get<Vector2>();
         Debug.Log(moveInput);
@@ -57,7 +67,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!isAlive)
         {
-            return; // If the player is not alive, skip the update logic
+            return; 
         }
         if (!myFeetCollider.IsTouchingLayers(LayerMask.GetMask("Ground"))) // check if the player is touching the ground
         {
@@ -110,7 +120,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Die()
     {
-        if (myBodyCollider.IsTouchingLayers(LayerMask.GetMask("Enemy")))
+        if (myBodyCollider.IsTouchingLayers(LayerMask.GetMask("Enemy", "Hazards")))
         {
 
             isAlive = false; // Set the player to not alive
@@ -118,4 +128,5 @@ public class PlayerMovement : MonoBehaviour
             myRigidbody.velocity = deathKick;
         }
     }
+
 }
